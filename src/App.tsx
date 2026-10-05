@@ -118,6 +118,7 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [copiedSection, setCopiedSection] = useState<string | null>(null);
+  const [conversionNotif, setConversionNotif] = useState<string | null>(null);
 
   // Client finder inputs for outreach generator
   const [targetLeadName, setTargetLeadName] = useState("Marcus Vance");
@@ -159,6 +160,15 @@ export default function App() {
     navigator.clipboard.writeText(text);
     setCopiedSection(id);
     setTimeout(() => setCopiedSection(null), 2000);
+  };
+
+  const triggerRentalLeadConversion = (reason: string = "Lead Submission") => {
+    if (typeof window !== "undefined" && (window as any).gtag) {
+      (window as any).gtag("event", "conversion", {
+        send_to: "AW-951736182/EdR8CNr6_JEdEPau6oUD"
+      });
+      console.log(`[Google Ads] Conversion event triggered: AW-951736182/EdR8CNr6_JEdEPau6oUD (${reason})`);
+    }
   };
 
   const handleSendMessage = async (textToSend?: string) => {
@@ -216,6 +226,19 @@ export default function App() {
       };
 
       setMessages((prev) => [...prev, botReply]);
+
+      // Check if lead contact was provided or tour scheduled
+      const contentCheck = `${messageContent} ${data.reply}`.toLowerCase();
+      if (
+        contentCheck.includes("tour") ||
+        contentCheck.includes("move in") ||
+        contentCheck.includes("schedule") ||
+        contentCheck.includes("@") ||
+        contentCheck.includes("phone") ||
+        contentCheck.includes("contact")
+      ) {
+        triggerRentalLeadConversion("Leasing Tour Request / Lead Contact Info");
+      }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Failed to send message";
       setErrorMessage(msg);
@@ -260,6 +283,7 @@ export default function App() {
     };
 
     setProspects([newEntry, ...prospects]);
+    triggerRentalLeadConversion("New Prospect Added to CRM");
     setNewBizName("");
     setNewContactName("");
     setNewEmail("");
@@ -1293,10 +1317,50 @@ export default function App() {
               <div ref={messagesEndRef} />
             </div>
 
+            {conversionNotif && (
+              <div className="bg-emerald-950/90 border-t border-b border-emerald-600/60 px-4 py-2 text-emerald-300 text-xs flex items-center justify-between gap-2 shrink-0">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span className="font-mono">{conversionNotif}</span>
+                </div>
+                <a
+                  href="/confirmation"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="underline text-emerald-200 hover:text-white shrink-0 text-[11px]"
+                >
+                  View /confirmation page &rarr;
+                </a>
+              </div>
+            )}
+
             <div className="px-4 md:px-8 py-2 bg-slate-950/50 border-t border-slate-800/60 shrink-0">
-              <p className="text-[11px] text-slate-500 uppercase tracking-wider mb-2 font-medium">
-                Simulate Customer Inquiries for {currentIndustry.name}:
-              </p>
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                <p className="text-[11px] text-slate-500 uppercase tracking-wider font-medium">
+                  Simulate Customer Inquiries for {currentIndustry.name}:
+                </p>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      triggerRentalLeadConversion("Manual Test Button Click");
+                      setConversionNotif("Google Ads event fired: AW-951736182/EdR8CNr6_JEdEPau6oUD");
+                      setTimeout(() => setConversionNotif(null), 5000);
+                    }}
+                    className="text-[10px] text-purple-300 hover:text-white bg-purple-950/60 hover:bg-purple-900/60 border border-purple-800/60 px-2.5 py-1 rounded-full transition flex items-center gap-1 font-medium cursor-pointer"
+                  >
+                    <span>🎯 Fire Lead Conversion Tag</span>
+                  </button>
+                  <a
+                    href="/confirmation"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-[10px] text-emerald-300 hover:text-white bg-emerald-950/60 hover:bg-emerald-900/60 border border-emerald-800/60 px-2.5 py-1 rounded-full transition flex items-center gap-1 font-medium"
+                  >
+                    <span>🔗 Open /confirmation</span>
+                  </a>
+                </div>
+              </div>
               <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
                 {currentIndustry.quickPrompts.map((prompt, idx) => (
                   <button

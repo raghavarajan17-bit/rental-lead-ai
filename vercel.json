@@ -4,6 +4,14 @@
   "outputDirectory": "dist",
   "rewrites": [
     {
+      "source": "/confirmation",
+      "destination": "/confirmation.html"
+    },
+    {
+      "source": "/thank-you",
+      "destination": "/confirmation.html"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
